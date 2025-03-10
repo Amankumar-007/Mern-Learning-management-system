@@ -15,10 +15,13 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:5000",
-    credentials: true,
+    origin: "http://localhost:5173", // ✅ Allow frontend's origin
+    credentials: true, // ✅ Allow cookies if needed
+    methods: ["GET", "POST", "PUT", "DELETE"], // ✅ Allow necessary methods
+    allowedHeaders: ["Content-Type", "Authorization"], // ✅ Allow necessary headers
   })
 );
+
 
 app.use("/api/users", userRouter);
 

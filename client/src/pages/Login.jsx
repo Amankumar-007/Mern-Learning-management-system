@@ -1,13 +1,16 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, registerUser } from "../features/authSlice";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import toast, { Toaster } from "react-hot-toast";
 
-const Login =()=> {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+const Login = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error } = useSelector((state) => state.auth);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,86 +18,80 @@ const Login =()=> {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(isSignUp ? "Registering User..." : "Logging in...", formData);
+    if (isLogin) {
+      dispatch(loginUser({ email: formData.email, password: formData.password })).then((res) => {
+        if (res.meta.requestStatus === "fulfilled") {
+          toast.success("Welcome Back!");
+          navigate("/");
+        }
+      });
+    } else {
+      dispatch(registerUser(formData)).then((res) => {
+        if (res.meta.requestStatus === "fulfilled") {
+          toast.success("Registration Successful!");
+          setIsLogin(true);
+        }
+      });
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d0d0d] text-white p-6">
-      {/* Toggle Links */}
-      <div className="flex gap-8 mb-8 text-lg font-pixel">
-        <button
-          className={`${
-            !isSignUp ? "text-cyan-400 border-b-4 border-cyan-400" : "text-gray-400"
-          } transition-all duration-300`}
-          onClick={() => setIsSignUp(false)}
-        >
-          Sign In
-        </button>
-        <button
-          className={`${
-            isSignUp ? "text-pink-400 border-b-4 border-pink-400" : "text-gray-400"
-          } transition-all duration-300`}
-          onClick={() => setIsSignUp(true)}
-        >
-          Sign Up
-        </button>
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ duration: 0.5 }}
+      className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-6"
+    >
+      <Toaster position="bottom-right" />
+      <div className="flex justify-between w-80 mb-6">
+        <button 
+          onClick={() => setIsLogin(true)}
+          className={`px-4 py-2 rounded-lg transition-all ${isLogin ? "bg-blue-600" : "bg-gray-700"}`}
+        >Sign In</button>
+        <button 
+          onClick={() => setIsLogin(false)}
+          className={`px-4 py-2 rounded-lg transition-all ${!isLogin ? "bg-blue-600" : "bg-gray-700"}`}
+        >Sign Up</button>
       </div>
-
-      {/* Animated Form Card */}
-      <motion.div
-        key={isSignUp ? "signup" : "signin"}
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -50 }}
-        transition={{ duration: 0.5 }}
-        className="bg-[#161616] p-8 rounded-lg shadow-lg border-4 border-cyan-400 w-96"
+      <motion.div 
+        className="w-80 bg-gray-800 p-8 rounded-xl shadow-lg"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.3 }}
       >
-        <h2 className="text-center text-xl font-pixel mb-6 text-cyan-400">
-          {isSignUp ? "Create an Account" : "Welcome Back"}
-        </h2>
-
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          {isSignUp && (
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Full Name"
-              className="p-3 border-2 bg-[#222] border-cyan-400 text-white rounded-md font-pixel focus:outline-none focus:border-pink-400 transition-all duration-300"
-              required
+        <h2 className="text-xl font-semibold text-center mb-6">{isLogin ? "Welcome Back" : "Create Account"}</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {!isLogin && (
+            <input 
+              type="text" name="name" placeholder="Name" value={formData.name} 
+              onChange={handleChange} 
+              className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none" required 
             />
           )}
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Email"
-            className="p-3 border-2 bg-[#222] border-cyan-400 text-white rounded-md font-pixel focus:outline-none focus:border-pink-400 transition-all duration-300"
-            required
+          <input 
+            type="email" name="email" placeholder="Email" value={formData.email} 
+            onChange={handleChange} 
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none" required 
           />
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Password"
-            className="p-3 border-2 bg-[#222] border-cyan-400 text-white rounded-md font-pixel focus:outline-none focus:border-pink-400 transition-all duration-300"
-            required
+          <input 
+            type="password" name="password" placeholder="Password" value={formData.password} 
+            onChange={handleChange} 
+            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none" required 
           />
-          <motion.button
-            whileHover={{ scale: 1.05, boxShadow: "0px 0px 15px #00ffff" }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-cyan-400 text-black py-3 rounded-md mt-4 font-pixel text-lg transition-all duration-300 hover:bg-pink-400 hover:shadow-pink-500"
-            type="submit"
+          <motion.button 
+            type="submit" 
+            className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition"
+            whileHover={{ scale: 1.05 }}
           >
-            {isSignUp ? "Sign Up" : "Sign In"}
+            {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
           </motion.button>
         </form>
+        <div className="flex justify-between mt-4 text-sm text-gray-400">
+          <button className="hover:underline">Forgot Password?</button>
+        </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
-} 
+};
 
 export default Login;
