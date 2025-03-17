@@ -59,13 +59,63 @@ export const getUserProfile = createAsyncThunk(
 );
 
 
+export const updateUserProfile = createAsyncThunk(
+  "auth/updateUserProfile",
+  async ({ name, profilePhoto }, { getState, rejectWithValue }) => {
+    try {
+      const { user } = getState().auth;
+
+      if (!user || !user.token) {
+        console.error("❌ No token found in Redux state.");
+        throw new Error("No token found");
+      }
+
+      const formData = new FormData();
+      formData.append("name", name);
+      if (profilePhoto) {
+        formData.append("profilePhoto", profilePhoto);
+      }
+
+      console.log("🔹 Sending update request to backend...");
+
+      const response = await axios.put(
+        `${API_URL}/${user._id}/update`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`, // ✅ Ensure token is included
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("✅ Update request successful. Fetching updated user data...");
+
+      // ✅ Fetch updated user profile from MongoDB Atlas
+      const updatedProfile = await axios.get(`${API_URL}/${user._id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+
+      console.log("✅ Updated user profile fetched:", updatedProfile.data);
+
+      // ✅ Store updated user in `localStorage`
+      localStorage.setItem("user", JSON.stringify(updatedProfile.data));
+
+      return updatedProfile.data;
+    } catch (error) {
+      console.error("❌ Update failed:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || "Update failed");
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: { user: savedUser, loading: false, error: null },
   reducers: {
     logout: (state) => {
       state.user = null;
-      localStorage.removeItem("user"); // Remove user from localStorage
+      localStorage.removeItem("user"); // ✅ Remove token on logout
     },
   },
   extraReducers: (builder) => {
@@ -94,6 +144,18 @@ const authSlice = createSlice({
         state.user = action.payload; // Store user profile in state
       })
       .addCase(getUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateUserProfile.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        localStorage.setItem("user", JSON.stringify(action.payload)); // ✅ Update localStorage
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

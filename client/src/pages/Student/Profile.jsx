@@ -1,93 +1,126 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserProfile } from "../../features/authSlice";
+import { updateUserProfile } from "../../features/authSlice";
 import { motion } from "framer-motion";
 
 const Profile = () => {
   const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state) => state.auth);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
 
   useEffect(() => {
-    if (user && user._id && !profileLoaded) {
-      dispatch(getUserProfile());
-      setProfileLoaded(true);
+    if (user) {
+      setName(user.name);
+      setPreviewImage(user.photoUrl && user.photoUrl.trim() !== "" ? user.photoUrl : "/default-avatar.png");
     }
-  }, [dispatch, user, profileLoaded]);
+  }, [user]);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePhoto(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen w-screen">
-        <p className="text-lg font-semibold">Loading...</p>
-      </div>
-    );
-  }
+  const handleSubmit = async () => {
+    await dispatch(updateUserProfile({ name, profilePhoto }));
+    setShowModal(false);
+  };
 
   return (
     <motion.div 
+      className="h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-400 to-indigo-500"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="h-screen w-screen flex flex-col justify-center items-center bg-gray-100"
     >
       <motion.div 
-        initial={{ x: -50 }} 
-        animate={{ x: 0 }} 
-        transition={{ duration: 0.6 }}
-        className="flex justify-center mb-4"
+        className="bg-white p-8 rounded-2xl shadow-lg max-w-lg w-full text-center"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-4xl shadow-lg">
-          😀
-        </div>
-      </motion.div>
-      
-      <motion.div 
-        initial={{ y: -20 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-white p-8 rounded-2xl shadow-lg max-w-3xl w-full text-center"
-      >
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">User Profile</h2>
-        {error ? (
-          <p className="text-red-500">{error}</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">Profile</h2>
+        {error && <p className="text-red-500">{error}</p>}
+        
+        {loading ? (
+          <p>Loading...</p>
         ) : (
-          user && (
-            <motion.div 
-              initial={{ y: 20 }}
-              animate={{ y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-4"
+          <>
+            <img 
+  src={previewImage ? previewImage : "/default-avatar.png"} 
+  alt="Profile" 
+  className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200 shadow-md"
+  onError={(e) => e.target.src = "/default-avatar.png"} // Fallback if image fails to load
+/>
+
+            <p className="mt-4 text-lg text-gray-700"><strong>Name:</strong> {user?.name}</p>
+            <p className="text-lg text-gray-600"><strong>Email:</strong> {user?.email}</p>
+            <button 
+              onClick={() => setShowModal(true)} 
+              className="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
             >
-              <p><strong>Name:</strong> {user.name}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Role:</strong> {user.role}</p>
-              <p><strong>Joined:</strong> {new Date(user.createdAt).toDateString()}</p>
-            </motion.div>
-          )
+              Update Profile
+            </button>
+          </>
         )}
       </motion.div>
-      
-      <motion.div 
-        initial={{ x: 50 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-white p-6 mt-6 rounded-2xl shadow-lg max-w-3xl w-full text-center"
-      >
-        <h3 className="text-2xl font-semibold text-gray-700 mb-4">Enrolled Courses</h3>
+
+      {showModal && (
         <motion.div 
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-2"
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
-          {[1, 2, 3].map((_, index) => (
-            <div
-              key={index}
-              className="animate-pulse bg-gray-200 rounded-md h-12 w-full"
-            ></div>
-          ))}
+          <motion.div 
+            className="bg-white p-6 rounded-lg w-96 shadow-lg"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h2 className="text-xl font-semibold mb-4">Update Profile</h2>
+            <input 
+              type="text" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              className="w-full p-2 border rounded mb-2" 
+              placeholder="Enter new name" 
+            />
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+              className="w-full p-2 border rounded mb-2" 
+            />
+            {previewImage && (
+              <motion.img 
+                src={previewImage} 
+                alt="Preview" 
+                className="w-24 h-24 rounded-full mx-auto mt-2 border" 
+                whileHover={{ scale: 1.1 }}
+              />
+            )}
+            <div className="flex justify-end mt-4">
+              <button 
+                onClick={handleSubmit} 
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"
+              >
+                Save
+              </button>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="ml-2 px-4 py-2 bg-gray-300 text-black rounded-lg hover:bg-gray-400 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </motion.div>
   );
 };
