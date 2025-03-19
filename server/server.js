@@ -4,6 +4,7 @@ import ConnectDB from "./database/db.js";
 import userRouter from "./routes/userRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import courseRoutes from "./routes/courseRoutes.js";
 
 dotenv.config();
 ConnectDB();
@@ -24,6 +25,7 @@ app.use(
 
 
 app.use("/api/users", userRouter);
+app.use("/api/course", courseRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
