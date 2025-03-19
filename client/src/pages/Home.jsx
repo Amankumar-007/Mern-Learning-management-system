@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Star, Users, Globe2, GraduationCap, Languages, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Star, Users, Globe2, GraduationCap, Languages, CheckCircle2, Search } from 'lucide-react';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import CourseListing from './Student/CourseListing';
 
 function Home() {
   const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const languages = [
     { name: 'English', flag: '🇺🇸' },
@@ -25,36 +28,21 @@ function Home() {
     transition: { duration: 0.6 }
   };
 
-  const trendingCourses = [
-    {
-      title: "Advanced Machine Learning",
-      instructor: "Dr. Sarah Johnson",
-      rating: 4.9,
-      students: 18500,
-      image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
-      badge: "Bestseller"
-    },
-    {
-      title: "Full-Stack Development Masterclass",
-      instructor: "Michael Chen",
-      rating: 4.8,
-      students: 15000,
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
-      badge: "New"
-    },
-    {
-      title: "Digital Marketing Strategy",
-      instructor: "Emma Davis",
-      rating: 4.7,
-      students: 12000,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
-      badge: "Popular"
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/courses?search=${encodeURIComponent(searchQuery.trim())}`);
     }
-  ];
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-    <Header/>
+      <Header />
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-r from-blue-50 via-white to-blue-50">
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,transparent)] pointer-events-none"></div>
@@ -82,8 +70,31 @@ function Home() {
               <p className="text-xl text-gray-600">
                 Access over 150+ premium courses in {languages.length} languages. Start your learning journey today.
               </p>
-              <div className="flex flex-wrap gap-3">
-                {languages.map((lang, index) => (
+
+              {/* Search Bar */}
+              <div className="w-full max-w-xl mt-4">
+                <div className="flex items-center rounded-full shadow-lg bg-white border border-gray-200">
+                  <input
+                    type="text"
+                    placeholder="Search courses..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="flex-grow px-5 py-3 rounded-l-full focus:outline-none text-gray-700 text-base"
+                  />
+                  <button
+                    onClick={handleSearch}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-r-full transition-colors flex items-center gap-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    Search
+                  </button>
+                </div>
+              </div>
+
+              {/* Language Buttons */}
+              <div className="flex flex-wrap gap-3 mt-4">
+                {languages.map((lang) => (
                   <motion.button
                     key={lang.name}
                     whileHover={{ scale: 1.05 }}
@@ -99,14 +110,9 @@ function Home() {
                   </motion.button>
                 ))}
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
-              >
-                Start Learning Now
-              </motion.button>
             </motion.div>
+
+            {/* Image and Badges */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -139,8 +145,7 @@ function Home() {
       <section className="bg-gradient-to-r from-blue-600 to-blue-700 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { icon: BookOpen, count: "150+", label: "Courses", delay: 0 },
+            {[{ icon: BookOpen, count: "150+", label: "Courses", delay: 0 },
               { icon: Users, count: "1.9M+", label: "Students", delay: 0.2 },
               { icon: Star, count: "4.7", label: "Rating", delay: 0.4 },
               { icon: Globe2, count: "10+", label: "Languages", delay: 0.6 }
@@ -164,57 +169,8 @@ function Home() {
         </div>
       </section>
 
-      {/* Trending Courses */}
-      {/* <section className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <span className="text-blue-600 font-semibold">FEATURED COURSES</span>
-            <h2 className="text-4xl font-bold text-gray-900 mt-2 mb-4">Trending This Week</h2>
-            <p className="text-xl text-gray-600">Discover our most popular courses</p>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {trendingCourses.map((course, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-                className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300"
-              >
-                <div className="relative">
-                  <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
-                  {course.badge && (
-                    <span className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {course.badge}
-                    </span>
-                  )}
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{course.title}</h3>
-                  <p className="text-gray-600 mb-4">{course.instructor}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Star className="w-5 h-5 text-yellow-400" />
-                      <span className="ml-2 text-gray-700 font-medium">{course.rating}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Users className="w-5 h-5 text-gray-500" />
-                      <span className="ml-2 text-gray-700 font-medium">{course.students.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section> */}
-      <CourseListing/>
+      {/* Course Listing Component */}
+      <CourseListing />
 
       {/* Reviews Section */}
       <section className="py-24 bg-gradient-to-b from-white to-blue-50">
@@ -271,7 +227,8 @@ function Home() {
           </div>
         </div>
       </section>
-      <Footer/>
+
+      <Footer />
     </div>
   );
 }
